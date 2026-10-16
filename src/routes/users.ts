@@ -1,7 +1,13 @@
 import { Router } from "express";
 import { authenticatedAccountId, requireApiKey } from "../middleware/auth.js";
+import { getUserUsage } from "../services/usage.js";
 import { assignUserPlan, getUser, registerUser } from "../services/users.js";
-import { parsePlanId, parseUserId, requireBody } from "../validation.js";
+import {
+  parseMonthParam,
+  parsePlanId,
+  parseUserId,
+  requireBody,
+} from "../validation.js";
 
 export const usersRouter = Router();
 
@@ -21,6 +27,16 @@ usersRouter.get("/:userId", async (req, res) => {
   const userId = parseUserId(req.params.userId);
   const user = await getUser(authenticatedAccountId(req), userId);
   res.json({ user });
+});
+
+usersRouter.get("/:userId/usage", async (req, res) => {
+  const userId = parseUserId(req.params.userId);
+  const result = await getUserUsage(
+    authenticatedAccountId(req),
+    userId,
+    parseMonthParam(req.query.month),
+  );
+  res.json(result);
 });
 
 usersRouter.put("/:userId/plan", async (req, res) => {

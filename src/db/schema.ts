@@ -5,6 +5,7 @@ import {
   boolean,
   check,
   date,
+  index,
   integer,
   pgTable,
   primaryKey,
@@ -129,6 +130,7 @@ export const consumptionRequests = pgTable(
   },
   (t) => [
     unique("consumption_account_request_unique").on(t.accountId, t.requestId),
+    index("consumption_account_created_idx").on(t.accountId, t.createdAt),
     check("consumption_units_check", sql`${t.units} > 0`),
     check(
       "consumption_decision_check",

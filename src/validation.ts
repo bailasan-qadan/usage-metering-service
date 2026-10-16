@@ -1,4 +1,5 @@
 import { BadRequestError } from "./errors.js";
+import { parseMonth } from "./months.js";
 import type { NewPlan, PlanChanges, PlanKind } from "./services/plans.js";
 
 const UUID_PATTERN =
@@ -162,4 +163,50 @@ export function parseRequestId(value: unknown): string {
 
 export function parseUnits(value: unknown): number {
   return parseInteger(value, "units", "invalid_units", 1, MAX_INT32);
+}
+
+export type Pagination = { limit: number; offset: number };
+
+function parseQueryInteger(
+  value: unknown,
+  field: string,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (value === undefined) {
+    return fallback;
+  }
+  const parsed =
+    typeof value === "string" && /^\d{1,10}$/.test(value)
+      ? Number(value)
+      : Number.NaN;
+  if (Number.isNaN(parsed) || parsed < min || parsed > max) {
+    throw new BadRequestError(
+      `'${field}' must be a whole number between ${min} and ${max}`,
+      `invalid_${field}`,
+    );
+  }
+  return parsed;
+}
+
+export function parsePagination(query: Record<string, unknown>): Pagination {
+  return {
+    limit: parseQueryInteger(query.limit, "limit", 1, 100, 20),
+    offset: parseQueryInteger(query.offset, "offset", 0, MAX_INT32, 0),
+  };
+}
+
+export function parseMonthParam(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const monthStart = typeof value === "string" ? parseMonth(value) : undefined;
+  if (monthStart === undefined) {
+    throw new BadRequestError(
+      "'month' must look like 2026-10 (a UTC month from 2000-01)",
+      "invalid_month",
+    );
+  }
+  return monthStart;
 }

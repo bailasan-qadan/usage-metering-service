@@ -9,7 +9,7 @@ import {
   users,
 } from "../db/schema.js";
 import { ConflictError, NotFoundError } from "../errors.js";
-import { utcMonthStart } from "../months.js";
+import { formatMonth, utcMonthStart } from "../months.js";
 import {
   decide,
   describeRejection,
@@ -70,7 +70,7 @@ function buildResult(args: {
     requestId: args.input.requestId,
     userId: args.input.userId,
     units: args.input.units,
-    month: args.month,
+    month: formatMonth(args.month),
     replayed: args.replayed,
     rejection:
       args.rejection === null

@@ -1,0 +1,1 @@
+CREATE INDEX "consumption_account_created_idx" ON "consumption_requests" USING btree ("account_id","created_at");

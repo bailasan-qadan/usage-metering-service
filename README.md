@@ -80,3 +80,14 @@ They are created automatically at startup and are read-only.
 - Retries: `requestId` is unique per account. Repeating a request with the same user and units returns the original decision with `replayed: true` and counts nothing again. A rejected request is replayed as rejected, so use a new `requestId` to try again. Reusing a `requestId` with a different user or number of units returns `409`. On a replay, `account` and `user` show the current balances.
 - Concurrency: each request runs in one database transaction. It first locks the account's usage row for the month, then the user's, always in that order. Requests of the same account therefore run one after another, while different accounts run in parallel. The decision, the counter updates and the history record commit together or not at all.
 - Plans are read inside that transaction, so an edit applies to every request that starts after the edit commits.
+
+## Usage and history
+
+- Months are written `YYYY-MM` (UTC) in requests and responses. Months before the current one can be queried back to 2000-01. A future month returns `400`.
+- `GET /usage?month=` returns the account's usage and a page of its users (`limit` and `offset`, ordered by `userId`). `month` defaults to the current month. Each entry shows `used`, `remaining`, and the plan and limits currently applied. A user with no usage in that month shows `used: 0`.
+- `GET /users/:userId/usage?month=` returns the same figures for one user.
+- `remaining` is only calculated for the current month. For earlier months it is `null`, because the plan shown is always the one applied now and old limits are not stored.
+- `GET /requests` lists request outcomes, newest first. Optional filters: `month` and `userId`. Each record has `requestId`, `userId`, `units`, `month`, `accepted`, `rejection` (`level`, `rule`, `message`) and `createdAt`. History is never rewritten by plan changes.
+- Pagination: `limit` (1 to 100, default 20) and `offset` (default 0). The response includes `pagination.total`.
+- Each response is read from one consistent database snapshot, so account totals and user figures agree.
+- Known limitation: offset pagination can shift if new requests arrive while a client is paging through history.

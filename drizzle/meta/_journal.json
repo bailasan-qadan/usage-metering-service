@@ -8,6 +8,13 @@
       "when": 1792153613434,
       "tag": "0000_smart_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792190625329,
+      "tag": "0001_friendly_boomerang",
+      "breakpoints": true
     }
   ]
 }
