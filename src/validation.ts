@@ -142,3 +142,24 @@ export function parsePlanChanges(body: unknown): PlanChanges {
   }
   return changes;
 }
+
+export function parseRequestId(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new BadRequestError(
+      "'requestId' must be a string",
+      "invalid_request_id",
+    );
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 200) {
+    throw new BadRequestError(
+      "'requestId' must be between 1 and 200 characters",
+      "invalid_request_id",
+    );
+  }
+  return trimmed;
+}
+
+export function parseUnits(value: unknown): number {
+  return parseInteger(value, "units", "invalid_units", 1, MAX_INT32);
+}

@@ -68,3 +68,15 @@ They are created automatically at startup and are read-only.
 - Assignments store a plan id, and decisions read the plan from the database on every request. So an update applies immediately to every account or user using that plan, and several users can share one plan while keeping separate usage totals.
 - Assumptions: `monthlyAllowance` is a whole number from 0 up, `maxPerRequest` a whole number from 1 up to 2,147,483,647, and plan names need not be unique.
 - Known limitation: plans cannot be deleted, because they may be assigned or referenced by request history.
+
+## Consuming units
+
+- `POST /consume` with `{ "userId", "units", "requestId" }` and the `X-API-Key` header. `units` must be a positive whole JSON number (up to 2,147,483,647). `requestId` is chosen by the caller (1 to 200 characters).
+- A request is accepted only if both the user's plan and the account's plan allow it. A rejection consumes nothing.
+- The response is `200` for both outcomes, because a rejection is a valid decision and not an error. It contains `accepted`, `rejection` (`level` is `user` or `account`, `rule` is `max_per_request` or `monthly_allowance`, plus a `message`), and the plan, limits, `used` and `remaining` for the account and the user.
+- If several rules fail, one is reported in this order: maximum per request before monthly allowance, and the user before the account.
+- Months are UTC calendar months. Usage belongs to the month in which the request is processed, and a new month starts at zero.
+- `remaining` is never negative. If an allowance is lowered below existing usage, `remaining` shows 0 and requests at that level are rejected until the allowance is raised or the month ends.
+- Retries: `requestId` is unique per account. Repeating a request with the same user and units returns the original decision with `replayed: true` and counts nothing again. A rejected request is replayed as rejected, so use a new `requestId` to try again. Reusing a `requestId` with a different user or number of units returns `409`. On a replay, `account` and `user` show the current balances.
+- Concurrency: each request runs in one database transaction. It first locks the account's usage row for the month, then the user's, always in that order. Requests of the same account therefore run one after another, while different accounts run in parallel. The decision, the counter updates and the history record commit together or not at all.
+- Plans are read inside that transaction, so an edit applies to every request that starts after the edit commits.

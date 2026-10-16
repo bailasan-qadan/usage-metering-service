@@ -121,8 +121,8 @@ export const consumptionRequests = pgTable(
     units: integer("units").notNull(),
     month: date("month", { mode: "string" }).notNull(),
     accepted: boolean("accepted").notNull(),
-    rejectedLevel: varchar("rejected_level", { length: 10 }),
-    rejectedRule: varchar("rejected_rule", { length: 30 }),
+    rejectedLevel: varchar("rejected_level", { length: 10 }).$type<"account" | "user">(),
+    rejectedRule: varchar("rejected_rule", { length: 30 }).$type<"monthly_allowance" | "max_per_request">(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
