@@ -29,3 +29,14 @@
 4. (account_id, request_id) is unique. Same request_id with the same data returns the original decision. Different data returns 409 Conflict.
 5. Rejections are recorded in history and consume nothing.
 6. New accounts default to Starter, new users to Basic.
+
+## Predefined plans
+
+| Plan | Kind | Monthly allowance | Max per request |
+|---|---|---|---|
+| Starter | account | 10,000 | 100 |
+| Pro | account | 100,000 | 1,000 |
+| Basic | user | 1,000 | 20 |
+| Premium | user | 5,000 | 100 |
+
+They are created automatically at startup and are read-only.
