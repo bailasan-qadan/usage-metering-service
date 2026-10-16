@@ -1,4 +1,4 @@
-# Design
+# Usage Metering Service
 
 ## Tables
 
