@@ -1,8 +1,6 @@
-import express from "express";
+import { app } from "./app.js";
 import { runMigrations } from "./db/migrate.js";
 import { seedPredefinedPlans } from "./db/seed.js";
-
-const app = express();
 
 function getPort(): number {
   const parsed = Number(process.env.PORT);
