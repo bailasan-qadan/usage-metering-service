@@ -1,7 +1,12 @@
 import { Router } from "express";
 import { BadRequestError } from "../errors.js";
 import { authenticatedAccountId, requireApiKey } from "../middleware/auth.js";
-import { createAccount, getAccount } from "../services/accounts.js";
+import {
+  assignAccountPlan,
+  createAccount,
+  getAccount,
+} from "../services/accounts.js";
+import { parsePlanId, requireBody } from "../validation.js";
 
 export const accountsRouter = Router();
 
@@ -36,5 +41,11 @@ accountsRouter.post("/accounts", async (req, res) => {
 
 accountsRouter.get("/account", requireApiKey, async (req, res) => {
   const account = await getAccount(authenticatedAccountId(req));
+  res.json({ account });
+});
+
+accountsRouter.put("/account/plan", requireApiKey, async (req, res) => {
+  const planId = parsePlanId(requireBody(req.body).planId);
+  const account = await assignAccountPlan(authenticatedAccountId(req), planId);
   res.json({ account });
 });

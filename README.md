@@ -46,3 +46,14 @@ They are created automatically at startup and are read-only.
 - `POST /accounts` with `{ "name": "..." }` creates an account on the Starter plan and returns its API key once. Only a SHA-256 hash is stored, so a lost key cannot be recovered.
 - Send the key in the `X-API-Key` header on every other request. A missing or invalid key returns `401`.
 - Assumption: creating an account needs no key, because the key does not exist yet. Role management is out of scope, so anyone who can reach the service can create an account.
+
+## Users and plan assignment
+
+- All user routes need the `X-API-Key` header. A user is identified by the caller's own `userId`, which is unique within an account. The same `userId` may exist in different accounts.
+- `POST /users` with `{ "userId": "...", "planId": "..." }` registers a user. `planId` is optional and defaults to Basic. Registering an existing `userId` returns `409`.
+- `GET /users/:userId` shows the user and the plan currently applied.
+- `PUT /users/:userId/plan` with `{ "planId": "..." }` changes the user's plan.
+- `GET /account` shows the account's plan. `PUT /account/plan` with `{ "planId": "..." }` changes it.
+- A user belonging to another account returns `404`, the same as a user that does not exist.
+- A plan can be assigned if it is predefined or owned by the caller's account. An unknown or inaccessible plan returns `404`, and a plan of the wrong kind (an account plan for a user, or the reverse) returns `400`.
+- Changing a plan keeps the units already consumed. It does not grant a fresh allowance.

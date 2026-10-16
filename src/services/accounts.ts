@@ -4,15 +4,12 @@ import { db } from "../db/index.js";
 import { accounts, apiKeys, plans } from "../db/schema.js";
 import { PREDEFINED_PLAN_IDS } from "../db/seed.js";
 import { NotFoundError } from "../errors.js";
-
-export type PlanView = {
-  id: string;
-  kind: "account" | "user";
-  name: string;
-  monthlyAllowance: number;
-  maxPerRequest: number;
-  predefined: boolean;
-};
+import {
+  getAssignablePlan,
+  planColumns,
+  toPlanView,
+  type PlanView,
+} from "./plans.js";
 
 export type AccountView = {
   id: string;
@@ -27,12 +24,7 @@ export async function getAccount(accountId: string): Promise<AccountView> {
       id: accounts.id,
       name: accounts.name,
       createdAt: accounts.createdAt,
-      planId: plans.id,
-      planKind: plans.kind,
-      planName: plans.name,
-      monthlyAllowance: plans.monthlyAllowance,
-      maxPerRequest: plans.maxPerRequest,
-      ownerAccountId: plans.ownerAccountId,
+      ...planColumns,
     })
     .from(accounts)
     .innerJoin(plans, eq(accounts.planId, plans.id))
@@ -46,14 +38,7 @@ export async function getAccount(accountId: string): Promise<AccountView> {
     id: row.id,
     name: row.name,
     createdAt: row.createdAt,
-    plan: {
-      id: row.planId,
-      kind: row.planKind,
-      name: row.planName,
-      monthlyAllowance: row.monthlyAllowance,
-      maxPerRequest: row.maxPerRequest,
-      predefined: row.ownerAccountId === null,
-    },
+    plan: toPlanView(row),
   };
 }
 
@@ -80,4 +65,13 @@ export async function createAccount(
   });
 
   return { account: await getAccount(accountId), apiKey };
+}
+
+export async function assignAccountPlan(
+  accountId: string,
+  planId: string,
+): Promise<AccountView> {
+  const plan = await getAssignablePlan(accountId, planId, "account");
+  await db.update(accounts).set({ planId: plan.id }).where(eq(accounts.id, accountId));
+  return getAccount(accountId);
 }
