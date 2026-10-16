@@ -57,3 +57,14 @@ They are created automatically at startup and are read-only.
 - A user belonging to another account returns `404`, the same as a user that does not exist.
 - A plan can be assigned if it is predefined or owned by the caller's account. An unknown or inaccessible plan returns `404`, and a plan of the wrong kind (an account plan for a user, or the reverse) returns `400`.
 - Changing a plan keeps the units already consumed. It does not grant a fresh allowance.
+
+## Custom plans
+
+- All plan routes need the `X-API-Key` header. An account sees the predefined plans plus its own custom plans.
+- `GET /plans` lists them (optional filter `?kind=account` or `?kind=user`). `GET /plans/:planId` shows one.
+- `POST /plans` with `{ "kind", "name", "monthlyAllowance", "maxPerRequest" }` creates a custom plan owned by the caller's account. `kind` is `account` or `user`.
+- `PATCH /plans/:planId` changes any of `name`, `monthlyAllowance` and `maxPerRequest`. A plan's `kind` cannot be changed.
+- Predefined plans are read-only (`403`). A plan owned by another account behaves as if it does not exist (`404`).
+- Assignments store a plan id, and decisions read the plan from the database on every request. So an update applies immediately to every account or user using that plan, and several users can share one plan while keeping separate usage totals.
+- Assumptions: `monthlyAllowance` is a whole number from 0 up, `maxPerRequest` a whole number from 1 up to 2,147,483,647, and plan names need not be unique.
+- Known limitation: plans cannot be deleted, because they may be assigned or referenced by request history.
