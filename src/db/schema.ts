@@ -18,7 +18,7 @@ export const plans = pgTable(
   "plans",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    kind: varchar("kind", { length: 10 }).notNull(),
+    kind: varchar("kind", { length: 10 }).$type<"account" | "user">().notNull(),
     name: varchar("name", { length: 100 }).notNull(),
     monthlyAllowance: bigint("monthly_allowance", { mode: "number" }).notNull(),
     maxPerRequest: integer("max_per_request").notNull(),

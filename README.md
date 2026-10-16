@@ -40,3 +40,9 @@
 | Premium | user | 5,000 | 100 |
 
 They are created automatically at startup and are read-only.
+
+## API keys
+
+- `POST /accounts` with `{ "name": "..." }` creates an account on the Starter plan and returns its API key once. Only a SHA-256 hash is stored, so a lost key cannot be recovered.
+- Send the key in the `X-API-Key` header on every other request. A missing or invalid key returns `401`.
+- Assumption: creating an account needs no key, because the key does not exist yet. Role management is out of scope, so anyone who can reach the service can create an account.
