@@ -120,3 +120,43 @@ Demonstration, on a fresh start:
 7. Set the company allowance to 50: remaining shows 0 and requests are rejected at the account level.
 
 The client's request code is identical in every step. Only the plan configuration in the service changes the outcome.
+
+## Example client
+
+`client/` is a small, separate application that pretends to be a document processing service. It calls the metering service only through its HTTP API, like any other calling application. The API key stays in the client's backend and is never sent to the browser.
+
+On startup it waits for the service, creates a demo account on a custom company plan (100 units a month, 50 per request), and registers two users: `alice` (Basic) and `bob` (Premium). Set `METERING_API_KEY` to reuse an existing account instead of creating one.
+
+Configuration: `METERING_URL` (default `http://localhost:3000`), `METERING_API_KEY` (optional), `PORT` (default `4000`).
+
+Run it locally with the service and database up: `cd client`, `npm install`, `npm run dev`, then open http://localhost:4000. Each page costs one unit.
+
+Demonstration, on a fresh start:
+
+1. alice, 10 pages: accepted.
+2. alice, 25 pages: rejected by the user's maximum per request (Basic allows 20).
+3. bob, 50 pages: accepted.
+4. bob, 45 pages: rejected by the account's monthly allowance, although bob has plenty left.
+5. Set the company allowance to 1000, then bob, 45 pages: accepted.
+6. Switch alice to Premium, then alice, 25 pages: accepted.
+7. Set the company allowance to 50: remaining shows 0 and requests are rejected at the account level.
+
+The client's request code is identical in every step. Only the plan configuration in the service changes the outcome.
+
+## Running with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+This builds and starts the whole stack: PostgreSQL, the metering service and the example client. On startup the service creates its tables and the predefined plans by itself, and the client waits for the service and prepares its demo account. No setup is needed: the database credentials have local-demo defaults.
+
+- Example client (the demo web page): http://localhost:4000
+- Metering service API: http://localhost:3000
+- PostgreSQL from your machine: port 5433
+
+Configuration (all optional, set in a `.env` file next to `docker-compose.yml`; `.env.example` shows the names): `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (use letters and digits only, because they are placed in a URL), and the host ports `SERVICE_PORT`, `CLIENT_PORT` and `DB_PORT`. Change the default password for anything other than a local demo.
+
+Data lives in a Docker volume and survives restarts. `docker compose down` stops the stack and keeps the data. `docker compose down -v` also deletes the data.
+
+Without Docker for the service: start only the database with `docker compose up -d db`, copy `.env.example` to `.env`, then run `npm install` and `npm run dev`. The automated tests use the same database (`npm test`).
