@@ -5,6 +5,7 @@ import {
   consumeUnits,
   createAccount,
   createScenario,
+  expectAccepted,
   expectStatus,
   get,
   getList,
@@ -43,8 +44,8 @@ describe("usage", () => {
         idle: { monthlyAllowance: 200, maxPerRequest: 50 },
       },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 10), 200);
-    expectStatus(await consumeUnits(api, s, "ben", 20), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 10));
+    expectAccepted(await consumeUnits(api, s, "ben", 20));
 
     const res = await api.send("GET", "/usage", { key: s.key });
     expectStatus(res, 200);
@@ -84,7 +85,7 @@ describe("usage", () => {
       { ann: { monthlyAllowance: 500, maxPerRequest: 50 } },
     );
     for (let i = 1; i <= 5; i++) {
-      expectStatus(await consumeUnits(api, s, "ann", 1, `h${i}`), 200);
+      expectAccepted(await consumeUnits(api, s, "ann", 1, `h${i}`));
     }
 
     assert.deepEqual(await historyIds(s, "?limit=2"), ["h5", "h4"]);
@@ -102,8 +103,8 @@ describe("usage", () => {
       { monthlyAllowance: 1000, maxPerRequest: 100 },
       { ann: limits, ben: limits },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 1, "ann-1"), 200);
-    expectStatus(await consumeUnits(api, s, "ben", 1, "ben-1"), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 1, "ann-1"));
+    expectAccepted(await consumeUnits(api, s, "ben", 1, "ben-1"));
 
     assert.deepEqual(await historyIds(s, "?userId=ann"), ["ann-1"]);
     assert.deepEqual(await historyIds(s, "?userId=ben"), ["ben-1"]);

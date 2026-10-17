@@ -8,6 +8,7 @@ import {
   createPlan,
   createScenario,
   createUser,
+  expectAccepted,
   expectStatus,
   get,
   getList,
@@ -207,7 +208,7 @@ describe("changing plans", () => {
       { monthlyAllowance: 1000, maxPerRequest: 100 },
       { ann: { monthlyAllowance: 100, maxPerRequest: 10 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 10), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 10));
 
     const bigger = await createPlan(api, s, {
       kind: "user",
@@ -231,7 +232,7 @@ describe("changing plans", () => {
       { monthlyAllowance: 1000, maxPerRequest: 100 },
       { ann: { monthlyAllowance: 100, maxPerRequest: 10 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 10), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 10));
     const rejected = await consumeUnits(api, s, "ann", 25);
     assert.equal(get(rejected.body, "accepted"), false);
 

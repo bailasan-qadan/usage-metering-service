@@ -7,7 +7,7 @@ import {
   createAccount,
   createScenario,
   createUser,
-  expectStatus,
+  expectAccepted,
   get,
   getList,
   getNumber,
@@ -30,7 +30,7 @@ before(async () => {
     { ann: { monthlyAllowance: 500, maxPerRequest: 50 } },
   );
   b = await createAccount(api, "Other account");
-  expectStatus(await consumeUnits(api, a, "ann", 10), 200);
+  expectAccepted(await consumeUnits(api, a, "ann", 10));
 });
 
 after(async () => {

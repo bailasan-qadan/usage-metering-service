@@ -215,3 +215,12 @@ export function consumeUnits(
     body: { userId, units, requestId },
   });
 }
+
+export function expectAccepted(res: ApiResponse): void {
+  expectStatus(res, 200);
+  assert.equal(
+    get(res.body, "accepted"),
+    true,
+    `Request was not accepted: ${JSON.stringify(res.body)}`,
+  );
+}

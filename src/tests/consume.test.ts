@@ -5,6 +5,7 @@ import {
   consumeUnits,
   createScenario,
   createUser,
+  expectAccepted,
   expectStatus,
   get,
   getNumber,
@@ -73,7 +74,7 @@ describe("consuming units", () => {
       { monthlyAllowance: 1000, maxPerRequest: 100 },
       { ann: { monthlyAllowance: 30, maxPerRequest: 20 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 20), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 20));
     const res = await consumeUnits(api, s, "ann", 20);
     assert.equal(get(res.body, "accepted"), false);
     assert.equal(get(res.body, "rejection.level"), "user");
@@ -87,8 +88,8 @@ describe("consuming units", () => {
       { monthlyAllowance: 100, maxPerRequest: 50 },
       { ann: { monthlyAllowance: 1000, maxPerRequest: 200 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 50), 200);
-    expectStatus(await consumeUnits(api, s, "ann", 45), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 50));
+    expectAccepted(await consumeUnits(api, s, "ann", 45));
 
     const res = await consumeUnits(api, s, "ann", 10);
     assert.equal(get(res.body, "accepted"), false);
@@ -122,7 +123,7 @@ describe("consuming units", () => {
       { ann: { monthlyAllowance: 100, maxPerRequest: 10 } },
     );
     await createUser(api, s, "ben", planIdOf(s, "ann"));
-    expectStatus(await consumeUnits(api, s, "ann", 10), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 10));
 
     const ann = await api.send("GET", "/users/ann/usage", { key: s.key });
     const ben = await api.send("GET", "/users/ben/usage", { key: s.key });
@@ -157,7 +158,7 @@ describe("consuming units", () => {
       { monthlyAllowance: 1000, maxPerRequest: 100 },
       { ann: { monthlyAllowance: 20, maxPerRequest: 20 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 20), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 20));
     const rejectedId = uniqueId();
     const rejected = await consumeUnits(api, s, "ann", 5, rejectedId);
     assert.equal(get(rejected.body, "accepted"), false);
@@ -186,7 +187,7 @@ describe("consuming units", () => {
       { ann: limits, ben: limits },
     );
     const requestId = uniqueId();
-    expectStatus(await consumeUnits(api, s, "ann", 10, requestId), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 10, requestId));
 
     const otherUnits = await consumeUnits(api, s, "ann", 11, requestId);
     assert.equal(otherUnits.status, 409);
@@ -202,8 +203,8 @@ describe("consuming units", () => {
       { monthlyAllowance: 100, maxPerRequest: 50 },
       { ann: { monthlyAllowance: 1000, maxPerRequest: 200 } },
     );
-    expectStatus(await consumeUnits(api, s, "ann", 40), 200);
-    expectStatus(await consumeUnits(api, s, "ann", 40), 200);
+    expectAccepted(await consumeUnits(api, s, "ann", 40));
+    expectAccepted(await consumeUnits(api, s, "ann", 40));
 
     const setAllowance = async (monthlyAllowance: number): Promise<void> => {
       expectStatus(
