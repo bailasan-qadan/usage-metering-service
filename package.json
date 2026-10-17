@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "lint": "eslint src client/src",
     "db:generate": "drizzle-kit generate",
-    "test": "tsx --env-file=.env src/tests/run.ts"
+    "test": "tsx --env-file=.env src/tests/run.ts",
+    "loadtest": "tsx src/loadtest/run.ts"
   },
   "keywords": [],
   "author": "",
