@@ -7,7 +7,7 @@
     "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src",
+    "lint": "eslint src client/src",
     "db:generate": "drizzle-kit generate",
     "test": "tsx --env-file=.env src/tests/run.ts"
   },

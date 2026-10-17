@@ -98,3 +98,25 @@ They are created automatically at startup and are read-only.
 - They run against the real PostgreSQL, in a separate database named after yours with `_test` appended (for example `metering_test`). It is created automatically, and its tables and predefined plans are set up the same way as at service startup. Your development data is never touched. To reset it, drop that database.
 - Every test creates its own accounts, so tests do not depend on each other or on earlier runs.
 - Covered: API key validation on every protected route, account isolation, predefined and custom plans, plan changes, every consume rule and rejection reason, retries and conflicts, UTC month boundaries (with a controlled clock), usage and history with pagination, and concurrent requests.
+
+## Example client
+
+`client/` is a small, separate application that pretends to be a document processing service. It calls the metering service only through its HTTP API, like any other calling application. The API key stays in the client's backend and is never sent to the browser.
+
+On startup it waits for the service, creates a demo account on a custom company plan (100 units a month, 50 per request), and registers two users: `alice` (Basic) and `bob` (Premium). Set `METERING_API_KEY` to reuse an existing account instead of creating one.
+
+Configuration: `METERING_URL` (default `http://localhost:3000`), `METERING_API_KEY` (optional), `PORT` (default `4000`).
+
+Run it locally with the service and database up: `cd client`, `npm install`, `npm run dev`, then open http://localhost:4000. Each page costs one unit.
+
+Demonstration, on a fresh start:
+
+1. alice, 10 pages: accepted.
+2. alice, 25 pages: rejected by the user's maximum per request (Basic allows 20).
+3. bob, 50 pages: accepted.
+4. bob, 45 pages: rejected by the account's monthly allowance, although bob has plenty left.
+5. Set the company allowance to 1000, then bob, 45 pages: accepted.
+6. Switch alice to Premium, then alice, 25 pages: accepted.
+7. Set the company allowance to 50: remaining shows 0 and requests are rejected at the account level.
+
+The client's request code is identical in every step. Only the plan configuration in the service changes the outcome.
