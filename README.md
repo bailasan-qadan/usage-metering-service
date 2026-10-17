@@ -91,3 +91,10 @@ They are created automatically at startup and are read-only.
 - Pagination: `limit` (1 to 100, default 20) and `offset` (default 0). The response includes `pagination.total`.
 - Each response is read from one consistent database snapshot, so account totals and user figures agree.
 - Known limitation: offset pagination can shift if new requests arrive while a client is paging through history.
+
+## Automated tests
+
+- Run them with `npm test` while the database is up (`docker compose up -d db`). They use Node's built-in test runner, so there are no extra dependencies.
+- They run against the real PostgreSQL, in a separate database named after yours with `_test` appended (for example `metering_test`). It is created automatically, and its tables and predefined plans are set up the same way as at service startup. Your development data is never touched. To reset it, drop that database.
+- Every test creates its own accounts, so tests do not depend on each other or on earlier runs.
+- Covered: API key validation on every protected route, account isolation, predefined and custom plans, plan changes, every consume rule and rejection reason, retries and conflicts, UTC month boundaries (with a controlled clock), usage and history with pagination, and concurrent requests.
