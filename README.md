@@ -16,6 +16,7 @@ Built with TypeScript (strict), Express, PostgreSQL and Drizzle ORM: one service
 - [Retry behavior](#retry-behavior)
 - [Months, usage and history](#months-usage-and-history)
 - [Product assumptions](#product-assumptions)
+- [Database design](#database-design)
 - [Main design decisions](#main-design-decisions)
 - [Known limitations](#known-limitations)
 - [Example client](#example-client)
@@ -206,7 +207,7 @@ A rejected request still returns HTTP `200` with `accepted: false`, because it i
 - Repeating a request with the same user and units returns the original decision with `replayed: true` and counts nothing again.
 - A rejected request is replayed as rejected. To try again, use a new `requestId`.
 - Reusing a `requestId` with a different user or number of units returns `409 request_id_conflict`.
-- On a replay, the `account` and `user` figures show the current balances.
+- On a replay, `month` is the month of the original request, and the `account` and `user` figures show that month's balances as they are now.
 - Retries that arrive at the same moment are safe: the account is locked while a request is processed, so exactly one of them is the first-time answer.
 
 ## Months, usage and history
@@ -233,6 +234,32 @@ The brief leaves these open. They are applied consistently across the service.
 10. A request id is final: a rejected request stays rejected when it is repeated.
 11. Past months show used units but no remaining figure.
 12. One API key is issued per account, once.
+
+## Database design
+
+One PostgreSQL database with seven tables. The schema is in `src/db/schema.ts` and the migrations are in `drizzle/`.
+
+| Table | Purpose | Key columns and rules |
+|---|---|---|
+| `plans` | Plan definitions | `kind` (`account` or `user`), `monthly_allowance` (at least 0), `max_per_request` (above 0), `owner_account_id` (empty for predefined, read-only plans) |
+| `accounts` | Calling applications | `plan_id` points to `plans` |
+| `api_keys` | Authentication | `account_id` points to `accounts`, `key_hash` is unique. Only the SHA-256 hash is stored, never the key |
+| `users` | The application's users | `account_id`, `external_id` (the application's own id), `plan_id`. Unique on `(account_id, external_id)` |
+| `account_usage` | Units used by an account per month | Primary key `(account_id, month)`, `units_used` never below 0 |
+| `user_usage` | Units used by a user per month | Primary key `(user_id, month)`, `units_used` never below 0 |
+| `consumption_requests` | History and retry record | Unique on `(account_id, request_id)`, index on `(account_id, created_at)`, stores `units`, `month`, `accepted` and the rejection level and rule |
+
+How they relate:
+
+- An account has one plan and many users and API keys. A user has one plan. Several accounts or users can point to the same plan.
+- Usage is one row per account or user per month, created when the first request of that month is processed.
+- Every consumed request is recorded in `consumption_requests` with its decision, so history never changes when a plan changes later.
+
+Rules enforced by the database itself, not only by the code:
+
+- Allowances and usage can never be negative, and `max_per_request` and `units` must be above 0.
+- An accepted request has no rejection details, and a rejected request always has a level (`account` or `user`) and a rule (`monthly_allowance` or `max_per_request`).
+- The same `requestId` cannot be recorded twice for one account, which makes retries safe even when they arrive at the same moment.
 
 ## Main design decisions
 
