@@ -85,7 +85,7 @@ describe("API key validation", () => {
       await client`SELECT key_hash FROM api_keys WHERE account_id = ${account.id}`;
     assert.equal(rows.length, 1);
 
-    const stored = rows[0]?.key_hash;
+    const stored: unknown = rows[0]?.key_hash;
     assert.notEqual(stored, account.key);
     assert.equal(stored, createHash("sha256").update(account.key).digest("hex"));
   });

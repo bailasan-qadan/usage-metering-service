@@ -24,7 +24,11 @@ const publicDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
-    chunks.push(chunk);
+    if (typeof chunk === "string") {
+      chunks.push(Buffer.from(chunk));
+    } else if (Buffer.isBuffer(chunk)) {
+      chunks.push(chunk);
+    }
   }
   const text = Buffer.concat(chunks).toString("utf8");
   return text === "" ? undefined : JSON.parse(text);
