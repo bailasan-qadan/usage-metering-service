@@ -184,6 +184,27 @@ export async function consume(
           "request_id_conflict",
         );
       }
+      
+      const [originalAccountCounter] = await tx
+        .select({ used: accountUsage.unitsUsed })
+        .from(accountUsage)
+        .where(
+          and(
+            eq(accountUsage.accountId, input.accountId),
+            eq(accountUsage.month, previous.month),
+          ),
+        );
+
+      const [originalUserCounter] = await tx
+        .select({ used: userUsage.unitsUsed })
+        .from(userUsage)
+        .where(
+          and(
+            eq(userUsage.userId, user.id),
+            eq(userUsage.month, previous.month),
+          ),
+        );
+
       return buildResult({
         input,
         month: previous.month,
@@ -193,9 +214,15 @@ export async function consume(
             ? { level: previous.rejectedLevel, rule: previous.rejectedRule }
             : null,
         accountPlan: accountPlan.name,
-        accountState,
+        accountState: {
+          ...accountState,
+          used: originalAccountCounter?.used ?? 0,
+        },
         userPlan: userPlan.name,
-        userState,
+        userState: {
+          ...userState,
+          used: originalUserCounter?.used ?? 0,
+        },
       });
     }
 
